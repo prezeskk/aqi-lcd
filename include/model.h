@@ -31,6 +31,7 @@ typedef struct {
   SensorType sensorType;
   int timeZoneOffset;
   int sensorAltitude;
+  int backlightTime;
 } Config;
 
 #endif
