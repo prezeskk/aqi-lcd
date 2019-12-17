@@ -25,6 +25,7 @@ void wifiConnected(Config config) {
     return;
   }
   dataSource = DataSource::createDataSource(config.sensorType, config.sensorUrl);
+  localMeasure = new LocalMeasure(config.sensorAltitude);
   fetcher = new Fetcher(frontend, dataSource);
   frontend->connected(config, dataSource);
   connected = true;

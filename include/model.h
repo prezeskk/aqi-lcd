@@ -20,6 +20,9 @@ typedef struct {
   uint16_t humidity;
   uint16_t pressure;
   float level;
+  float local_temp;
+  float local_humidity;
+  float local_pressure;
 } DisplayModel;
 
 typedef enum {
@@ -31,6 +34,7 @@ typedef struct {
   SensorType sensorType;
   int timeZoneOffset;
   int backlightTime;
+  int sensorAltitude;
 } Config;
 
 #endif
