@@ -1,8 +1,20 @@
 #if FRONTEND_LED
 #include "led/led-frontend.h"
+#include "serial-logger.h"
+#include "led/led-web-config.h"
 
 LedFrontend::LedFrontend() {
   this->strip = new Adafruit_NeoPixel(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+  this->ledWebConfig = new LedWebConfig();
+  this->logger = new SerialLogger();
+}
+
+CustomWebConfig* LedFrontend::getCustomWebConfig() {
+  return ledWebConfig;
+}
+
+Logger* LedFrontend::getLogger() {
+  return logger;
 }
 
 void LedFrontend::init() {
@@ -23,19 +35,23 @@ void LedFrontend::doLoop() {
 }
 
 void LedFrontend::updateDisplayModel(DisplayModel *displayModel) {
-  uint32_t colors[] = {0x008200, 0x00ff00, 0xffff00, 0xffae29, 0xff2d19, 0x940000};
-  float j;
+  uint16_t pixelLevel = displayModel->level * (strip->numPixels() - 1);
   for (int i = 1; i < strip->numPixels(); i++) {
-    j = ((float) i) / strip->numPixels();
-    if (j < displayModel->level) {
-      j *= 5.0;
-      uint32_t c = mixColors(colors[(int) j], colors[(int) j + 1], j - ((int) j));
+    if (i <= pixelLevel) {
+      uint32_t c = getColor(i);
       strip->setPixelColor(i, c);
     } else {
       strip->setPixelColor(i, 0);
     }
   }
   strip->show();
+}
+
+uint32_t LedFrontend::getColor(uint16_t ledIndex) {
+  // hue range: ledIndex is mapped from (0, numPixels) to (100, 20°)
+  int hue_deg = map(ledIndex, 0, strip->numPixels() - 1, 100, 20);
+  uint16_t hue = ((float) hue_deg ) / 360.0 * 65535;
+  return strip->gamma32(strip->ColorHSV(hue));
 }
 
 void LedFrontend::updateDataSourceStatus(DataSourceStatus status) {
@@ -55,14 +71,6 @@ void LedFrontend::updateDataSourceStatus(DataSourceStatus status) {
  }
  strip->setPixelColor(0, color);
  strip->show();
-}
-
-void LedFrontend::print(String message) {
-  Serial.print(message);
-}
-
-void LedFrontend::println(String message) {
-  Serial.println(message);
 }
 
 void LedFrontend::unpack(uint32_t color, uint8_t *colors) {

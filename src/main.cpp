@@ -36,7 +36,7 @@ void setup() {
   Serial.println("AQI LCD is starting!");
   pinMode(D3, OUTPUT);
   frontend->init();
-  webConfig = new WebConfig(frontend, &wifiConnected);
+  webConfig = new WebConfig(frontend->getLogger(), frontend->getCustomWebConfig(), &wifiConnected);
 }
 
 void loop(void) {

@@ -10,23 +10,21 @@
 #include "frontend.h"
 #include "model.h"
 
-#define CONFIG_VERSION "aqiled1"
+#define CONFIG_VERSION "aqiled2"
 #define DRD_TIMEOUT 10
 #define DRD_ADDRESS 0
 
 class WebConfig {
   public:
-  WebConfig(Frontend *frontend, std::function<void(Config)> wifiConnected);
+  WebConfig(Logger *logger, CustomWebConfig *customWebConfig, std::function<void(Config)> wifiConnected);
   void update();
 
   private:
-  Frontend *frontend;
+  Logger *logger;
+  CustomWebConfig *customWebConfig;
 
   char sensorUrl[512];
   char sensorType[16];
-  char timezoneOffset[5];
-  char backlightTime[5];
-  char sensorAltitude[5];
 
   DoubleResetDetector *drd;
 
@@ -38,9 +36,6 @@ class WebConfig {
   static const String SENSOR_TYPE_NAMES[];
   static const String SENSOR_TYPE_VALUES[];
   IotWebConfParameter *sensorTypeParam;
-  IotWebConfParameter *timezoneOffsetParam;
-  IotWebConfParameter *backlightTimeParam;
-  IotWebConfParameter *sensorAltitudeParam;
   boolean displayLogs = true;
 
   boolean formValidator();
