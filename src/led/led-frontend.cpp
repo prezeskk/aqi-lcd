@@ -4,7 +4,6 @@
 #include "led/led-web-config.h"
 
 LedFrontend::LedFrontend() {
-  this->strip = new Adafruit_NeoPixel(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
   this->ledWebConfig = new LedWebConfig();
   this->logger = new SerialLogger();
 }
@@ -21,14 +20,16 @@ void LedFrontend::init() {
 #if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
   clock_prescale_set(clock_div_1);
 #endif
-  strip->begin();
-  strip->show();
-  strip->setBrightness(BRIGHTNESS);
 }
 
 void LedFrontend::connected(Config config, DataSource *dataSource) {
- strip->setPixelColor(0, 0x00ff00);
- strip->show();
+  if (strip == NULL) {
+    strip = new Adafruit_NeoPixel(this->ledWebConfig->getLedCount(), LED_PIN, NEO_GRB + NEO_KHZ800);
+    strip->begin();
+  }
+  strip->setBrightness(this->ledWebConfig->getBrightness());
+  strip->setPixelColor(0, 0x00ff00);
+  strip->show();
 }
 
 void LedFrontend::doLoop() {
@@ -48,10 +49,9 @@ void LedFrontend::updateDisplayModel(DisplayModel *displayModel) {
 }
 
 uint32_t LedFrontend::getColor(uint16_t ledIndex) {
-  // hue range: ledIndex is mapped from (0, numPixels) to (100, 20°)
-  int hue_deg = map(ledIndex, 0, strip->numPixels() - 1, 100, 20);
-  uint16_t hue = ((float) hue_deg ) / 360.0 * 65535;
-  return strip->gamma32(strip->ColorHSV(hue));
+  uint32_t colors[] = {0x57b108, 0xb0dd10, 0xffd911, 0xe58100, 0x990000};
+  uint16_t index = 5 * ledIndex / strip->numPixels();
+  return colors[index];
 }
 
 void LedFrontend::updateDataSourceStatus(DataSourceStatus status) {
