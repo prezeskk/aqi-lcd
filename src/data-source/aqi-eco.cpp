@@ -17,14 +17,11 @@ boolean AqiEcoDataSource::readModel(JsonModel *model) {
   http.begin(*client, this->url);
   int httpCode = http.GET();
   Serial.printf("[HTTP] Response code: %d\r\n", httpCode);
-  if (httpCode > 0) {
-    if (httpCode == HTTP_CODE_OK) {
-      String body = http.getString();
-
+  if (httpCode == HTTP_CODE_OK) {
+    String body = http.getString();
+    if (body.startsWith("{")) {
       deserializeJson(*doc, body);
-
       JsonObject average_1h = (*doc)["average_1h"];
-      
       model->pm25 = average_1h["pm25"];
       model->pm10 = average_1h["pm10"];
       model->temp = average_1h["temperature"];
