@@ -13,7 +13,7 @@ LocalDataSource::LocalDataSource(String url, MDNSResolver *mdnsResolver) {
 
   parseUrl(url);
   if (local) {
-    mdnsResolver->setAddressToResolve(hostArr);
+    mdnsResolver->setup(hostArr);
   }
 
   const size_t capacity = JSON_ARRAY_SIZE(15) + 15*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + 490;
@@ -48,6 +48,7 @@ boolean LocalDataSource::readModel(JsonModel *model) {
   if (httpCode == HTTP_CODE_OK) {
     String body = http.getString();
     if (body.startsWith("{")) {
+      Serial.println("[HTTP] Decoding result");
       deserializeJson(*doc, body);
       JsonArray sensordatavalues = (*doc)["sensordatavalues"];
       for (auto value : sensordatavalues) {
@@ -66,11 +67,13 @@ boolean LocalDataSource::readModel(JsonModel *model) {
         } else if (inArray(PRESSURE_VALUES, n)) {
           model->pressure = v.toInt() / 100;
         }
-        result = true;
       }
+      result = true;
+      Serial.println("[HTTP] Result decoded");
     }
   }
   http.end();
+  Serial.println("[HTTP] Request finished");
   return result;
 }
 
