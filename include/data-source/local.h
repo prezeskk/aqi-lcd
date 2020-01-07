@@ -16,6 +16,7 @@ class LocalDataSource : public DataSource {
     public:
     LocalDataSource(String url, MDNSResolver *mdnsResolver);
     boolean readModel(JsonModel *model);
+    boolean isReady();
 
     private:
     boolean parseUrl(String url);
@@ -28,7 +29,7 @@ class LocalDataSource : public DataSource {
     static boolean inArray(const String array[], String str);
     
     WiFiClient *client;
-    DynamicJsonDocument *doc;
+    StaticJsonDocument<JSON_ARRAY_SIZE(15) + 15*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + 490> doc;
     MDNSResolver *mdnsResolver;
 
     String protocol;

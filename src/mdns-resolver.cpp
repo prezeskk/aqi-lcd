@@ -1,46 +1,37 @@
 #include "mdns-resolver.h"
 
 MDNSResolver::MDNSResolver() {
-    buffer = new byte[MAX_MDNS_PACKET_SIZE];
+    udp = new WiFiUDP();
+    resolver = new Resolver(*udp);
 }
 
 void MDNSResolver::setup(const char* addressToResolve) {
-    mdns = new mdns::MDns(NULL, NULL, ([this](const mdns::Answer* answer){
-        if (isQueryInitialized && strncmp(query.qname_buffer, answer->name_buffer, MAX_MDNS_NAME_LEN) == 0) {
-            strncpy(response, answer->rdata_buffer, MAX_MDNS_NAME_LEN);
-            Serial.print("[mdns] ");
-            Serial.print(query.qname_buffer);
-            Serial.print(" resolved to ");
-            Serial.println(response);
-            resolved = true;
-        }
-    }), buffer, MAX_MDNS_PACKET_SIZE);
-
-    strncpy(query.qname_buffer, addressToResolve, MAX_MDNS_NAME_LEN);
-    query.qtype = MDNS_TYPE_A;
-    query.qclass = 1;
-    query.unicast_response = 0;
-    doResolve();
-    lastUpdate = millis();
-    isQueryInitialized = true;
-    mdns->loop(); // a single loop to read the reponse
+    resolver->setLocalIP(WiFi.localIP());
+    strncpy(query, addressToResolve, 256);
+    initialized = true;
 }
 
 void MDNSResolver::loop() {
-    if (mdns == NULL) {
+    if (!initialized) {
         return;
     }
-    mdns->loop();
-    if (millis() - lastUpdate > 60 * 1000 && isQueryInitialized) {
+    resolver->loop();
+    if (lastUpdate == 0 || millis() - lastUpdate > 30 * 60 * 1000) {
         doResolve();
-        lastUpdate = millis();
-    }
+    }    
 }
 
 void MDNSResolver::doResolve() {
-    mdns->Clear();
-    mdns->AddQuery(query);
-    mdns->Send();
+    Serial.printf("[mdns] Resolving %s\r\n", query);
+    IPAddress result = resolver->search(query);
+    if (result == INADDR_NONE) {
+        Serial.println("[mdns] Can't resolve");
+        return;
+    }
+    result.toString().toCharArray(response, 256, 0);
+    Serial.printf("[mdns] Response %s\r\n", response);
+    resolved = true;
+    lastUpdate = millis();
 }
 
 boolean MDNSResolver::isResolved() {

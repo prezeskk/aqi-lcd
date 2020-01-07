@@ -15,9 +15,14 @@ LocalDataSource::LocalDataSource(String url, MDNSResolver *mdnsResolver) {
   if (local) {
     mdnsResolver->setup(hostArr);
   }
+}
 
-  const size_t capacity = JSON_ARRAY_SIZE(15) + 15*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + 490;
-  doc = new DynamicJsonDocument(capacity);
+boolean LocalDataSource::isReady() {
+  if (local) {
+    return mdnsResolver->isResolved();
+  } else {
+    return true;
+  }
 }
 
 boolean LocalDataSource::readModel(JsonModel *model) {
@@ -29,10 +34,6 @@ boolean LocalDataSource::readModel(JsonModel *model) {
   } else {
     if (local) {
       if (mdnsResolver->isResolved()) {
-        Serial.print("[HTTP] Resolved ");
-        Serial.print(host);
-        Serial.print(" to ");
-        Serial.println(mdnsResolver->getResolvedIp());
         http.begin(*client, mdnsResolver->getResolvedIp(), port, path, https);
       } else {
         Serial.print("[HTTP] Can't resolve ");
@@ -49,8 +50,8 @@ boolean LocalDataSource::readModel(JsonModel *model) {
     String body = http.getString();
     if (body.startsWith("{")) {
       Serial.println("[HTTP] Decoding result");
-      deserializeJson(*doc, body);
-      JsonArray sensordatavalues = (*doc)["sensordatavalues"];
+      deserializeJson(doc, body);
+      JsonArray sensordatavalues = doc["sensordatavalues"];
       for (auto value : sensordatavalues) {
         JsonObject o = value.as<JsonObject>();
         String n = o["value_type"];

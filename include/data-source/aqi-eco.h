@@ -11,10 +11,11 @@ class AqiEcoDataSource : public DataSource {
     public:
     AqiEcoDataSource(String url);
     boolean readModel(JsonModel *model);
+    boolean isReady();
 
     private:
     BearSSL::WiFiClientSecure *client;
-    DynamicJsonDocument *doc;
+    StaticJsonDocument<JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(8) + 2*JSON_OBJECT_SIZE(9)> doc;
 };
 
 #endif
